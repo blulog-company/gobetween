@@ -25,6 +25,7 @@ import (
 	"github.com/yyyar/gobetween/server/udp/session"
 	"github.com/yyyar/gobetween/stats"
 	"github.com/yyyar/gobetween/utils"
+	"github.com/yyyar/gobetween/utils/udpproxyprotocol"
 )
 
 const UDP_PACKET_SIZE = 65507
@@ -263,6 +264,16 @@ func (this *Server) serve() {
 					log.Debug("Client disallowed to connect: ", clientAddr.IP)
 					continue
 				}
+			}
+
+			if this.cfg.Udp.ProxyProtocol {
+				header, size, err := udpproxyprotocol.NewByteHeader(clientAddr)
+				if err != nil {
+					log.Errorf("Could not create udp proxy protocol header for address: %s", clientAddr)
+					return
+				}
+				buf = append(header, buf...)
+				n += size
 			}
 
 			//special case for single request mode
